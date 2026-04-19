@@ -4,7 +4,7 @@ const COLORS = {
   1: '#f5c842',
   2: '#ff7c2a',
   3: '#ff2d55',
-  4: '#590016',
+  4: '#ff0066',
 };
 
 const LABELS = {
