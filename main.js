@@ -158,27 +158,47 @@ function updateStats(points) {
 }
 
 // ── Main ────────────────────────────────────────────────────────
-async function main() {
+const POLL_INTERVAL_MS = 5 * 60 * 1000; // 2 minutes
+let cachedStations = null;
+ 
+async function refresh() {
+  if (document.hidden) return;
+ 
   try {
-    // Phase 1: load all station markers immediately (no stress data yet)
-    const stations = await fetchStations();
-    globe.pointsData(stations);
-
-    // Phase 2: fetch current stress — sort so warmer-region stations go first
-    stations.sort((a, b) => b.avg_max_monthly_mean - a.avg_max_monthly_mean);
-    const withStress = await fetchCurrentBatch(stations);
-
+    // Only fetch the station list once — it doesn't change
+    if (!cachedStations) {
+      cachedStations = await fetchStations();
+      cachedStations.sort((a, b) => b.avg_max_monthly_mean - a.avg_max_monthly_mean);
+      globe.pointsData(cachedStations); // show pins immediately, stress loads next
+    }
+ 
+    const withStress = await fetchCurrentBatch(cachedStations);
     globe.pointsData(withStress);
     updateStats(withStress);
-
-    // Hide loader
+ 
+    // Append last-refreshed time to status badge
+    const hhmm = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+    const statusEl = document.getElementById('status-text');
+    statusEl.textContent = statusEl.textContent.replace(/ · .*/, '') + ` · ${hhmm}`;
+ 
+  } catch (err) {
+    console.error('Refresh failed:', err);
+  }
+}
+ 
+async function main() {
+  try {
+    await refresh();
     document.getElementById('loading').classList.add('hidden');
-
   } catch (err) {
     console.error('Failed to load reef data:', err);
     document.getElementById('loading').querySelector('p').textContent =
       'ERROR LOADING DATA — CHECK CONSOLE';
+    return;
   }
+ 
+  // Poll every 5 min, skipping when tab is hidden
+  setInterval(refresh, POLL_INTERVAL_MS);
 }
 
 main();
