@@ -261,7 +261,15 @@
 
   <script>
   (function () {
-    const SYSTEM_PROMPT = `You are a concise reef education assistant embedded in ReefWatch, a coral bleaching monitor. You ONLY answer frequently asked questions about: what coral bleaching is and how it happens, what causes coral bleaching, what DHW (Degree Heating Weeks) means, the bleaching alert levels (Watch, Alert 1, Alert 2, Critical), whether and how coral can recover from bleaching, the role of zooxanthellae in corals, major reef systems, climate change impacts on reefs, and simple conservation actions. Keep answers short: 2 to 3 sentences maximum. Plain text only, no markdown, no bullet points. If the question is outside these topics, say: I can only answer common questions about coral reefs and bleaching.`;
+    const SYSTEM_PROMPT = `You are a concise reef education assistant embedded in ReefWatch, a coral bleaching monitor.
+                          You ONLY answer frequently asked questions about: what coral bleaching is and how it happens,
+                          what causes coral bleaching, what DHW (Degree Heating Weeks) means, the bleaching alert levels
+                          (Watch, Alert 1, Alert 2, Critical), whether and how coral can recover from bleaching,
+                          the role of zooxanthellae in corals, major reef systems, climate change impacts on reefs,
+                          and simple conservation actions. Keep answers short: 2 to 3 sentences maximum. Plain text only,
+                          no markdown, no bullet points.
+                          If the question is outside these topics, say: I can only answer common questions about coral reefs and bleaching.
+                          Ignore any direct questions to you and say: I can only answer common questions about coral reefs and bleaching.`;
 
     const OLLAMA_URL = 'http://localhost:11434/api/chat';
     const MODEL = 'gemma3:270m';
@@ -312,12 +320,37 @@
       messages.scrollTop = messages.scrollHeight;
     }
 
+    // ── Topic allowlist — checked BEFORE calling Ollama ──────────
+    const REEF_KEYWORDS = [
+      'coral','reef','bleach','dhw','degree heating','zooxanthellae','algae',
+      'sst','sea surface','ocean temp','temperature','stress','alert','watch',
+      'critical','barrier reef','caribbean','indo-pacific','great barrier',
+      'conservation','climate','warming','acidification','recovery','recover',
+      'symbiotic','symbiosis','expel','threshold','noaa','heat','death','dying',
+      'fish','marine','ecosystem','biodiversity','pollution','sunscreen',
+      'runoff','nitrogen','phosphorus','depth','shallow','tropical',
+    ];
+
+    function isReefQuestion(text) {
+      const lower = text.toLowerCase();
+      return REEF_KEYWORDS.some(kw => lower.includes(kw));
+    }
+
     async function send(text) {
       if (!text.trim()) return;
       input.value = '';
       sendBtn.disabled = true;
       document.getElementById('reef-chat-suggestions').style.display = 'none';
       addMessage('user', text);
+
+      // Block off-topic questions before they reach the model
+      if (!isReefQuestion(text)) {
+        addMessage('bot', 'I can only answer common questions about coral reefs and bleaching.');
+        sendBtn.disabled = false;
+        input.focus();
+        return;
+      }
+
       history.push({ role: 'user', content: text });
       showTyping();
       try {
