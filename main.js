@@ -14,7 +14,7 @@ const LABELS = {
   3: 'Bleach Alert 2',
   4: 'Critical',
 };
-
+console.log({ name: 'Test', stress_level: 2, dhw: 6.5 });
 function stressColor(level) {
   return COLORS[Math.min(level, 4)] || COLORS[0];
 }
@@ -50,6 +50,18 @@ function heatmapColorFactory(_layerObj) {
   return reefColorRamp;
 }
 
+// ── Heat stress plain-English summary ──────────────────────────
+function dhwSummary(dhw, stress) {
+  if (dhw == null) {
+    if (stress === 0) return 'No heat stress detected. This reef appears healthy.';
+    return 'Heat stress data unavailable for this station.';
+  }
+  if (dhw < 1)  return 'Heat stress is minimal — corals at this reef are likely healthy.';
+  if (dhw < 4)  return 'Some heat stress is building. Corals may show early signs of stress.';
+  if (dhw < 8)  return `Significant heat stress (score ${dhw.toFixed(1)}) — bleaching is likely at this reef.`;
+  return `Severe heat stress (score ${dhw.toFixed(1)}) — coral death is possible at this reef.`;
+}
+
 // ── Tooltip (defined before Globe so it can be passed as callback) ──
 const tooltip = document.getElementById('tooltip');
 let mouseX = 0, mouseY = 0;
@@ -65,13 +77,15 @@ function handleHover(point) {
   document.getElementById('tt-region').textContent    = `${point.subregion} · ${point.region}`;
   document.getElementById('tt-sst').textContent       = point.sst_max != null ? `${point.sst_max.toFixed(2)} °C` : '—';
   document.getElementById('tt-threshold').textContent = `${point.bleaching_threshold.toFixed(2)} °C`;
-  document.getElementById('tt-dhw').textContent       = point.dhw != null ? `${point.dhw} °C-weeks` : '—';
+  document.getElementById('tt-dhw').textContent       = point.dhw != null ? point.dhw.toFixed(1) : '—';
 
   const badge = document.getElementById('tt-stress-badge');
   badge.textContent      = stressLabel(stress);
   badge.style.background = color + '22';
   badge.style.color      = color;
   badge.style.border     = `1px solid ${color}55`;
+
+  document.getElementById('tt-summary').textContent = dhwSummary(point.dhw, stress);
 
   let x = mouseX + 16, y = mouseY - 16;
   if (x + 260 > window.innerWidth)  x = mouseX - 260 - 32;
@@ -108,7 +122,7 @@ const globe = Globe()
   .heatmapBandwidth(2.5)
   .heatmapColorSaturation(1.8)
   .heatmapBaseAltitude(0.01)
-  .heatmapTopAltitude(0.18)
+  .heatmapTopAltitude(0.12)
   .heatmapColorFn(heatmapColorFactory)
   .onPointHover(handleHover)
   (document.getElementById('globe-container'));

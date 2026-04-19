@@ -166,6 +166,54 @@ header {
   flex-shrink: 0;
 }
 
+
+/* ── Glossary panel ── */
+#glossary {
+  position: fixed;
+  left: 28px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 10;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  background: rgba(10,22,40,0.75);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px;
+  backdrop-filter: blur(12px);
+  max-width: 180px;
+}
+
+.glossary-title {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.55rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--muted);
+  margin-bottom: 2px;
+}
+
+.glossary-item {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.glossary-label {
+  font-family: 'Figtree', sans-serif;
+  font-size: 0.70rem;
+  font-weight: 700;
+  color: var(--text);
+}
+
+.glossary-desc {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.58rem;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
 /* ── Tooltip ── */
 #tooltip {
   position: fixed;
@@ -210,6 +258,17 @@ header {
 }
 
 .tt-row-label { color: var(--muted); }
+
+
+.tt-summary {
+  font-family: 'Space Mono', monospace;
+  font-size: 0.6rem;
+  color: var(--text);
+  line-height: 1.6;
+  margin: 8px 0 4px;
+  padding-top: 8px;
+  border-top: 1px solid var(--border);
+}
 
 .tt-stress {
   display: inline-block;
