@@ -65,7 +65,33 @@ let mouseX = 0, mouseY = 0;
 document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
 
 function handleHover(point) {
-  if (!point) { tooltip.classList.remove('visible'); return; }
+  if (!point) {
+    tooltip.classList.remove('visible');
+    if (hoveredPoint !== null) {
+      hoveredPoint = null;
+      globe.ringsData([]);
+    }
+    return;
+  }
+  // Update beacon ring on new point
+  if (point !== hoveredPoint) {
+    hoveredPoint = point;
+    const stress = point.stress_level ?? 0;
+    const color = stressColor(stress);
+    // stress 0→4: faster period, higher speed, more rings = thicker appearance
+    const period   = 1400 - stress * 220;  // 1400ms (calm) → 520ms (critical)
+    const speed    = 1.0  + stress * 0.55; // 1.0 → 3.2
+    const ringCount = 1   + stress;        // 1 ring (calm) → 5 rings (critical)
+    const offsets  = Array.from({ length: ringCount }, (_, i) => (i - (ringCount - 1) / 2) * 0.18);
+    globe.ringsData(offsets.map(offset => ({
+      latitude:  point.latitude,
+      longitude: point.longitude,
+      color:     t => `${color}${Math.round((1 - t * t) * 210).toString(16).padStart(2, '0')}`,
+      maxRadius: 3.5 + offset,
+      speed,
+      period,
+    })));
+  }
 
   const stress = point.stress_level ?? 0;
   const color  = stressColor(stress);
@@ -122,6 +148,15 @@ const globe = Globe()
   .heatmapTopAltitude(0.12)
   .heatmapColorFn(heatmapColorFactory)
   .onPointHover(handleHover)
+  // Rings — used for the hover beacon pulse
+  .ringsData([])
+  .ringLat(r => r.latitude)
+  .ringLng(r => r.longitude)
+  .ringColor(r => r.color)
+  .ringMaxRadius(r => r.maxRadius)
+  .ringPropagationSpeed(r => r.speed)
+  .ringRepeatPeriod(r => r.period)
+  .ringAltitude(0.011)
   (document.getElementById('globe-container'));
 
 // Auto-rotate
@@ -142,6 +177,8 @@ window.addEventListener('resize', () => globe.width(window.innerWidth).height(wi
 // ── View toggle ─────────────────────────────────────────────────
 let isHeatmapMode = false;
 let currentPoints = [];
+let hoveredPoint = null;
+let pulseFrame = 0;
 
 function buildHeatmapLayer(points) {
   // Wrap in a layer object — heatmapPoints accessor reads layer.points
@@ -160,8 +197,9 @@ function applyStationsView(points) {
 }
 
 function applyHeatmapView(points) {
-  globe.pointsData([]).heatmapsData([buildHeatmapLayer(points)]);
+  globe.pointsData([]).heatmapsData([buildHeatmapLayer(points)]).ringsData([]);
   tooltip.classList.remove('visible');
+  hoveredPoint = null;
   globe.onPointHover(null);
 }
 
