@@ -1,6 +1,6 @@
 # 🪸 Reef Watch
 
-> Real-time global coral bleaching monitor — live sea surface temps, degree heating weeks, and stress levels across every major reef system on Earth.
+> A data-visualization tool to show which coral reefs are subject to bleaching around the world in real time
 
 ![Status](https://img.shields.io/badge/status-live-00e5a0?style=flat-square)
 ![Data](https://img.shields.io/badge/data-coral.tsr.lol-1a4a7a?style=flat-square)
@@ -8,13 +8,7 @@
 
 ## What it does
 
-Reef Watch pulls live data from the [Coral Stress API](https://api.coral.tsr.lol) and plots every monitored reef station on an interactive 3D globe. Each dot is colored by thermal stress level — from healthy green to critical red — updated in real time.
-
-Hover any reef to see:
-- Max sea surface temperature
-- Bleaching threshold
-- Degree Heating Weeks (DHW)
-- Current stress classification
+Reef Watch pulls live data from the [Coral Stress API](https://api.coral.tsr.lol) and plots every monitored reef station on an interactive 3D globe. Each dot is colored by thermal stress level.
 
 ## Stress levels
 
@@ -32,17 +26,12 @@ Hover any reef to see:
 - [three.js](https://threejs.org) — 3D rendering
 - [Coral Stress API](https://api.coral.tsr.lol) — reef monitoring data
 
-No build step. No dependencies to install. Just open `index.html`.
-
 ## Run locally
 
 ```bash
-git clone https://github.com/yourname/reef-watch
-cd reef-watch
+git clone https://github.com/yourname/ReefWatch
 open index.html
 ```
-
-> **Note:** The API is fetched via [allorigins.win](https://allorigins.win) to bypass CORS. For production, proxy the API server-side.
 
 ## File structure
 
@@ -55,7 +44,7 @@ reef-watch/
 
 ## Why it matters
 
-50% of the world's coral reefs have disappeared since the 1950s. The ones that remain are under accelerating thermal stress from climate change. Reef Watch makes that crisis visible in real time, for anyone.
+50% of the world's coral reefs have disappeared since the 1950s. The ones that remain are under accelerating thermal stress from climate change. ReefWatch makes that crisis visible in real time, for anyone.
 
 ---
 
