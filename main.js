@@ -23,14 +23,41 @@ function stressLabel(level) {
   return LABELS[Math.min(level, 4)] || LABELS[0];
 }
 
+// ── Sonar Audio ─────────────────────────────────────────────────
+const sonarAudio = new Audio('audios/dragon-studio-submarine-sonar-386154.mp3');
+sonarAudio.loop = true;
+sonarAudio.volume = 0;
+
+let sonarFadeInterval = null;
+
+function startSonar(stress) {
+  sonarAudio.playbackRate = 0.6 + (stress / 4) * 1.4; // 0.6x (calm) → 2.0x (critical)
+  sonarAudio.play().catch(() => {});
+
+  clearInterval(sonarFadeInterval);
+  sonarFadeInterval = setInterval(() => {
+    sonarAudio.volume = Math.min(0.5, sonarAudio.volume + 0.05);
+    if (sonarAudio.volume >= 0.5) clearInterval(sonarFadeInterval);
+  }, 30);
+}
+
+function stopSonar() {
+  clearInterval(sonarFadeInterval);
+  sonarFadeInterval = setInterval(() => {
+    sonarAudio.volume = Math.max(0, sonarAudio.volume - 0.05);
+    if (sonarAudio.volume <= 0) {
+      clearInterval(sonarFadeInterval);
+      sonarAudio.pause();
+    }
+  }, 30);
+}
+
 // ── Heatmap color ramp ──────────────────────────────────────────
-// heatmapColorFn is called with the layer object and must RETURN a (t => color) fn.
-// r_ unwraps it as: A = colorFn(layerObj), then A(t/99) for each color stop.
 const HEATMAP_COLOR_STOPS = [
-  { t: 0.00, r: 0,   g: 229, b: 160 },  // #00e5a0 healthy teal
-  { t: 0.33, r: 245, g: 200, b: 66  },  // #f5c842 watch gold
-  { t: 0.66, r: 255, g: 124, b: 42  },  // #ff7c2a alert orange
-  { t: 1.00, r: 255, g: 0,   b: 102 },  // #ff0066 critical pink
+  { t: 0.00, r: 0,   g: 229, b: 160 },
+  { t: 0.33, r: 245, g: 200, b: 66  },
+  { t: 0.66, r: 255, g: 124, b: 42  },
+  { t: 1.00, r: 255, g: 0,   b: 102 },
 ];
 
 function reefColorRamp(t) {
@@ -45,7 +72,6 @@ function reefColorRamp(t) {
   return `rgba(${lerp(lo.r, hi.r)},${lerp(lo.g, hi.g)},${lerp(lo.b, hi.b)},${alpha.toFixed(2)})`;
 }
 
-// heatmapColorFn(layerObj) → (t) => color  — the required higher-order shape
 function heatmapColorFactory(_layerObj) {
   return reefColorRamp;
 }
@@ -54,12 +80,12 @@ function heatmapColorFactory(_layerObj) {
 function dhwSummary(dhw, stress) {
   if (stress === 0) return 'No heat stress detected. This reef appears healthy.';
   if (stress === 1) return 'Some heat stress is building. Corals may show early signs of stress.';
-  if (stress === 2) return `Significant heat stress. Bleaching is likely at this reef.`;
-  if (stress === 3) return `Severe heat stress. Bleaching is occurring at this reef.`;
-  return `Critical heat stress (Alert ${stress}! Coral death is possible at this reef.`;
+  if (stress === 2) return 'Significant heat stress. Bleaching is likely at this reef.';
+  if (stress === 3) return 'Severe heat stress. Bleaching is occurring at this reef.';
+  return `Critical heat stress (Alert ${stress})! Coral death is possible at this reef.`;
 }
 
-// ── Tooltip (defined before Globe so it can be passed as callback) ──
+// ── Tooltip ──────────────────────────────────────────────────────
 const tooltip = document.getElementById('tooltip');
 let mouseX = 0, mouseY = 0;
 document.addEventListener('mousemove', e => { mouseX = e.clientX; mouseY = e.clientY; });
@@ -70,19 +96,20 @@ function handleHover(point) {
     if (hoveredPoint !== null) {
       hoveredPoint = null;
       globe.ringsData([]);
+      stopSonar();
     }
     return;
   }
+
   // Update beacon ring on new point
   if (point !== hoveredPoint) {
     hoveredPoint = point;
     const stress = point.stress_level ?? 0;
     const color = stressColor(stress);
-    // stress 0→4: faster period, higher speed, more rings = thicker appearance
-    const period   = 1400 - stress * 220;  // 1400ms (calm) → 520ms (critical)
-    const speed    = 1.0  + stress * 0.55; // 1.0 → 3.2
-    const ringCount = 1   + stress;        // 1 ring (calm) → 5 rings (critical)
-    const offsets  = Array.from({ length: ringCount }, (_, i) => (i - (ringCount - 1) / 2) * 0.18);
+    const period    = 1400 - stress * 220;  // 1400ms (calm) → 520ms (critical)
+    const speed     = 1.0  + stress * 0.55; // 1.0 → 3.2
+    const ringCount = 1    + stress;        // 1 ring (calm) → 5 rings (critical)
+    const offsets   = Array.from({ length: ringCount }, (_, i) => (i - (ringCount - 1) / 2) * 0.18);
     globe.ringsData(offsets.map(offset => ({
       latitude:  point.latitude,
       longitude: point.longitude,
@@ -91,6 +118,7 @@ function handleHover(point) {
       speed,
       period,
     })));
+    startSonar(stress);
   }
 
   const stress = point.stress_level ?? 0;
@@ -125,7 +153,6 @@ const globe = Globe()
   .backgroundImageUrl('https://unpkg.com/three-globe/example/img/night-sky.png')
   .atmosphereColor('#1a4a7a')
   .atmosphereAltitude(0.18)
-  // Points
   .pointsData([])
   .pointLat(d => d.latitude)
   .pointLng(d => d.longitude)
@@ -134,9 +161,6 @@ const globe = Globe()
   .pointLabel(() => '')
   .pointAltitude(0.01)
   .pointResolution(24)
-  // Heatmap — accessors are called with each layer object (not point objects).
-  // heatmapPoints(layerObj) → the array of points for that layer (we store them on .points)
-  // heatmapPointLat/Lng/Weight(point) → extract coords from each point object
   .heatmapsData([])
   .heatmapPoints(layer => layer.points)
   .heatmapPointLat(p => p.latitude)
@@ -148,7 +172,6 @@ const globe = Globe()
   .heatmapTopAltitude(0.12)
   .heatmapColorFn(heatmapColorFactory)
   .onPointHover(handleHover)
-  // Rings — used for the hover beacon pulse
   .ringsData([])
   .ringLat(r => r.latitude)
   .ringLng(r => r.longitude)
@@ -181,7 +204,6 @@ let hoveredPoint = null;
 let pulseFrame = 0;
 
 function buildHeatmapLayer(points) {
-  // Wrap in a layer object — heatmapPoints accessor reads layer.points
   return {
     points: points.map(p => ({
       latitude:  p.latitude,
@@ -200,6 +222,7 @@ function applyHeatmapView(points) {
   globe.pointsData([]).heatmapsData([buildHeatmapLayer(points)]).ringsData([]);
   tooltip.classList.remove('visible');
   hoveredPoint = null;
+  stopSonar();
   globe.onPointHover(null);
 }
 
