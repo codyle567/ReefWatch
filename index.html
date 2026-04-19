@@ -211,5 +211,147 @@
     });
   </script>
   <a id="donate-btn" href="https://coral.org/en/donate/other/" target="_blank" rel="noopener noreferrer">🪸 Donate</a>
+
+  <!-- ── Reef Chatbot ── -->
+  <div id="reef-chat">
+    <button id="reef-fab" aria-label="Open reef assistant">
+      <svg id="fab-icon-open" width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+      </svg>
+      <svg id="fab-icon-close" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="display:none">
+        <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
+      </svg>
+    </button>
+    <div id="reef-chat-panel">
+      <div id="reef-chat-header">
+        <div style="display:flex;align-items:center;gap:10px">
+          <div id="reef-chat-avatar">🪸</div>
+          <div>
+            <div id="reef-chat-title">Reef Assistant</div>
+            <div id="reef-chat-subtitle">Common questions · Powered by Ollama</div>
+          </div>
+        </div>
+        <button id="reef-chat-clear" title="Clear chat">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+            <polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.1"/>
+          </svg>
+        </button>
+      </div>
+      <div id="reef-chat-messages">
+        <div class="reef-msg reef-msg-bot">
+          <div class="reef-bubble">Hi! I can answer common questions about coral reefs and bleaching. What would you like to know?</div>
+        </div>
+      </div>
+      <div id="reef-chat-suggestions">
+        <button class="reef-suggestion" onclick="reefSuggest('What is coral bleaching?')">What is coral bleaching?</button>
+        <button class="reef-suggestion" onclick="reefSuggest('What does DHW mean?')">What does DHW mean?</button>
+        <button class="reef-suggestion" onclick="reefSuggest('Can bleached coral recover?')">Can bleached coral recover?</button>
+        <button class="reef-suggestion" onclick="reefSuggest('What causes coral bleaching?')">What causes it?</button>
+      </div>
+      <div id="reef-chat-input-wrap">
+        <input id="reef-chat-input" type="text" placeholder="Ask about coral reefs…" autocomplete="off" />
+        <button id="reef-chat-send">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
+          </svg>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+  (function () {
+    const SYSTEM_PROMPT = `You are a concise reef education assistant embedded in ReefWatch, a coral bleaching monitor. You ONLY answer frequently asked questions about: what coral bleaching is and how it happens, what causes coral bleaching, what DHW (Degree Heating Weeks) means, the bleaching alert levels (Watch, Alert 1, Alert 2, Critical), whether and how coral can recover from bleaching, the role of zooxanthellae in corals, major reef systems, climate change impacts on reefs, and simple conservation actions. Keep answers short: 2 to 3 sentences maximum. Plain text only, no markdown, no bullet points. If the question is outside these topics, say: I can only answer common questions about coral reefs and bleaching.`;
+
+    const OLLAMA_URL = 'http://localhost:11434/api/chat';
+    const MODEL = 'gemma3:270m';
+
+    let history = [];
+    let panelOpen = false;
+
+    const fab       = document.getElementById('reef-fab');
+    const panel     = document.getElementById('reef-chat-panel');
+    const messages  = document.getElementById('reef-chat-messages');
+    const input     = document.getElementById('reef-chat-input');
+    const sendBtn   = document.getElementById('reef-chat-send');
+    const clearBtn  = document.getElementById('reef-chat-clear');
+    const iconOpen  = document.getElementById('fab-icon-open');
+    const iconClose = document.getElementById('fab-icon-close');
+
+    fab.addEventListener('click', () => {
+      panelOpen = !panelOpen;
+      panel.classList.toggle('open', panelOpen);
+      iconOpen.style.display  = panelOpen ? 'none'  : 'block';
+      iconClose.style.display = panelOpen ? 'block' : 'none';
+      if (panelOpen) input.focus();
+    });
+
+    clearBtn.addEventListener('click', () => {
+      history = [];
+      messages.innerHTML = '<div class="reef-msg reef-msg-bot"><div class="reef-bubble">Chat cleared. Ask me anything about coral reefs!</div></div>';
+      document.getElementById('reef-chat-suggestions').style.display = 'flex';
+    });
+
+    function addMessage(role, text) {
+      const wrap = document.createElement('div');
+      wrap.className = `reef-msg reef-msg-${role}`;
+      const bubble = document.createElement('div');
+      bubble.className = 'reef-bubble';
+      bubble.textContent = text;
+      wrap.appendChild(bubble);
+      messages.appendChild(wrap);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    function showTyping() {
+      const wrap = document.createElement('div');
+      wrap.className = 'reef-msg reef-msg-bot';
+      wrap.id = 'reef-typing';
+      wrap.innerHTML = '<div class="reef-bubble reef-typing"><span></span><span></span><span></span></div>';
+      messages.appendChild(wrap);
+      messages.scrollTop = messages.scrollHeight;
+    }
+
+    async function send(text) {
+      if (!text.trim()) return;
+      input.value = '';
+      sendBtn.disabled = true;
+      document.getElementById('reef-chat-suggestions').style.display = 'none';
+      addMessage('user', text);
+      history.push({ role: 'user', content: text });
+      showTyping();
+      try {
+        const res = await fetch(OLLAMA_URL, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ model: MODEL, messages: [{ role: 'system', content: SYSTEM_PROMPT }, ...history], stream: false }),
+        });
+        const data = await res.json();
+        document.getElementById('reef-typing')?.remove();
+        let reply;
+        if (data.error) {
+          reply = `Ollama error: ${data.error}`;
+        } else if (data.message?.content) {
+          reply = data.message.content.trim();
+        } else {
+          reply = 'Unexpected response — is Ollama running with gemma3:270m pulled?';
+        }
+        addMessage('bot', reply);
+        history.push({ role: 'assistant', content: reply });
+      } catch (err) {
+        document.getElementById('reef-typing')?.remove();
+        addMessage('bot', err.message.includes('fetch')
+          ? 'Cannot reach Ollama. Run: OLLAMA_ORIGINS="*" ollama serve'
+          : `Error: ${err.message}`);
+      }
+      sendBtn.disabled = false;
+      input.focus();
+    }
+
+    sendBtn.addEventListener('click', () => send(input.value));
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') send(input.value); });
+    window.reefSuggest = text => send(text);
+  })();
+  </script>
 </body>
 </html>
