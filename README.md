@@ -6,6 +6,13 @@
 ![Data](https://img.shields.io/badge/data-coral.tsr.lol-1a4a7a?style=flat-square)
 ![License](https://img.shields.io/badge/license-MIT-f5c842?style=flat-square)
 
+
+## AI Backend: Ollama (https://ollama.com)
+ Install: https://ollama.com/download
+ Then run:
+   ollama pull gemma3:270m
+
+
 ## What it does
 
 Reef Watch pulls live data from the [Coral Stress API](https://api.coral.tsr.lol) and plots every monitored reef station on an interactive 3D globe. Each dot is colored by thermal stress level.
