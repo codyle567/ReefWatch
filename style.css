@@ -314,3 +314,27 @@ header {
   color: var(--muted);
   letter-spacing: 0.1em;
 }
+#donate-btn {
+  position: fixed;
+  bottom: 90px;
+  left: 30px;
+  z-index: 30;
+  background: rgba(0, 229, 160, 0.12);
+  border: 1px solid rgba(0, 229, 160, 0.35);
+  border-radius: 10px;
+  color: var(--healthy);
+  font-family: 'Space Mono', monospace;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  text-decoration: none;
+  padding: 10px 16px;
+  backdrop-filter: blur(12px);
+  transition: background 0.2s, transform 0.2s;
+}
+
+#donate-btn:hover {
+  background: rgba(0, 229, 160, 0.22);
+  transform: translateY(-2px);
+}
