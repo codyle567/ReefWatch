@@ -36,7 +36,7 @@ Reef Watch pulls live data from the [Coral Stress API](https://api.coral.tsr.lol
 ## Run locally
 
 ```bash
-git clone https://github.com/yourname/ReefWatch
+git clone https://github.com/codyle567/ReefWatch
 open index.html
 ```
 
