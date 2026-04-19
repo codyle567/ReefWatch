@@ -59,4 +59,4 @@ reef-watch/
 
 ---
 
-Data provided by [coral.tsr.lol](https://api.coral.tsr.lol) · Built at a hackathon
+Data provided by [coral.tsr.lol](https://api.coral.tsr.lol) · Built at FullyHacks 2026
