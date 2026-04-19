@@ -4,7 +4,7 @@ const COLORS = {
   1: '#f5c842',
   2: '#ff7c2a',
   3: '#ff2d55',
-  4: '#ff0066',
+  4: '#590016',
 };
 
 const LABELS = {
@@ -14,7 +14,7 @@ const LABELS = {
   3: 'Bleach Alert 2',
   4: 'Critical',
 };
-console.log({ name: 'Test', stress_level: 2, dhw: 6.5 });
+
 function stressColor(level) {
   return COLORS[Math.min(level, 4)] || COLORS[0];
 }
@@ -52,14 +52,11 @@ function heatmapColorFactory(_layerObj) {
 
 // ── Heat stress plain-English summary ──────────────────────────
 function dhwSummary(dhw, stress) {
-  if (dhw == null) {
-    if (stress === 0) return 'No heat stress detected. This reef appears healthy.';
-    return 'Heat stress data unavailable for this station.';
-  }
-  if (dhw < 1)  return 'Heat stress is minimal — corals at this reef are likely healthy.';
-  if (dhw < 4)  return 'Some heat stress is building. Corals may show early signs of stress.';
-  if (dhw < 8)  return `Significant heat stress (score ${dhw.toFixed(1)}) — bleaching is likely at this reef.`;
-  return `Severe heat stress (score ${dhw.toFixed(1)}) — coral death is possible at this reef.`;
+  if (stress === 0) return 'No heat stress detected. This reef appears healthy.';
+  if (stress === 1) return 'Some heat stress is building. Corals may show early signs of stress.';
+  if (stress === 2) return `Significant heat stress. Bleaching is likely at this reef.`;
+  if (stress === 3) return `Severe heat stress. Bleaching is occurring at this reef.`;
+  return `Critical heat stress (Alert ${stress}! Coral death is possible at this reef.`;
 }
 
 // ── Tooltip (defined before Globe so it can be passed as callback) ──
