@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Reef Watch — Coral Bleaching Monitor</title>
+
+  <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;700;800&family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
+  <link rel="stylesheet" href="style.css"/>
+</head>
+<body>
+
+  <!-- Loading -->
+  <div id="loading">
+    <div class="loader-ring"></div>
+    <p>FETCHING REEF DATA...</p>
+  </div>
+
+  <!-- Globe -->
+  <div id="globe-container"></div>
+
+  <!-- Header -->
+  <header>
+    <div class="wordmark">
+      <h1>Reef Watch</h1>
+      <span>Global Coral Bleaching Monitor</span>
+    </div>
+    <div id="status-badge">
+      <span class="dot"></span>
+      <span id="status-text">LOADING...</span>
+    </div>
+  </header>
+
+  <!-- Legend -->
+  <div id="legend">
+    <div class="legend-title">Stress Level</div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--healthy)"></div>
+      <span>No Stress</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--watch)"></div>
+      <span>Watch</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--alert)"></div>
+      <span>Alert 1</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--severe)"></div>
+      <span>Alert 2</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-dot" style="background:var(--critical)"></div>
+      <span>Critical</span>
+    </div>
+  </div>
+
+  <!-- Stats bar -->
+  <div id="stats-bar">
+    <div class="stat">
+      <div class="stat-value" id="stat-total">—</div>
+      <div class="stat-label">Stations Monitored</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value c-healthy" id="stat-healthy">—</div>
+      <div class="stat-label">Healthy Reefs</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value c-watch" id="stat-watch">—</div>
+      <div class="stat-label">Under Watch</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value c-alert" id="stat-alert">—</div>
+      <div class="stat-label">Bleaching Alert</div>
+    </div>
+    <div class="stat">
+      <div class="stat-value c-severe" id="stat-severe">—</div>
+      <div class="stat-label">Severe / Critical</div>
+    </div>
+  </div>
+
+  <!-- Tooltip -->
+  <div id="tooltip">
+    <div class="tt-name" id="tt-name"></div>
+    <div class="tt-region" id="tt-region"></div>
+    <div class="tt-row">
+      <span class="tt-row-label">Sea Temp (max)</span>
+      <span id="tt-sst">—</span>
+    </div>
+    <div class="tt-row">
+      <span class="tt-row-label">Bleaching Threshold</span>
+      <span id="tt-threshold">—</span>
+    </div>
+    <div class="tt-row">
+      <span class="tt-row-label">Heating Weeks (DHW)</span>
+      <span id="tt-dhw">—</span>
+    </div>
+    <div>
+      <span class="tt-stress" id="tt-stress-badge"></span>
+    </div>
+  </div>
+
+  <!-- Globe.gl -->
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+  <script src="https://unpkg.com/globe.gl@2.27.2/dist/globe.gl.min.js"></script>
+  <script src="main.js"></script>
+</body>
+</html>
