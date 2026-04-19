@@ -7,6 +7,71 @@
 
   <link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;700;800&family=Space+Mono:wght@400;700&family=Syne:wght@400;700;800&display=swap" rel="stylesheet"/>
   <link rel="stylesheet" href="style.css"/>
+
+  <style>
+    /* ── View Toggle ── */
+    #view-toggle-wrap {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-family: 'Space Mono', monospace;
+      font-size: 0.62rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: var(--muted);
+      user-select: none;
+    }
+
+    #view-toggle-wrap .toggle-label {
+      transition: color 0.25s;
+    }
+    #view-toggle-wrap .toggle-label.active {
+      color: var(--text);
+    }
+
+    /* The hidden checkbox */
+    #view-toggle {
+      display: none;
+    }
+
+    /* The pill track */
+    .toggle-track {
+      position: relative;
+      width: 46px;
+      height: 24px;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 999px;
+      cursor: pointer;
+      transition: background 0.3s ease, border-color 0.3s ease;
+      flex-shrink: 0;
+    }
+
+    /* Thumb */
+    .toggle-track::after {
+      content: '';
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 16px;
+      height: 16px;
+      border-radius: 50%;
+      background: var(--muted);
+      transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1), background 0.3s ease;
+    }
+
+    /* Checked state — thumb slides right, track lights up */
+    #view-toggle:checked + .toggle-track {
+      background: rgba(0, 229, 160, 0.15);
+      border-color: rgba(0, 229, 160, 0.4);
+    }
+
+    #view-toggle:checked + .toggle-track::after {
+      transform: translateX(22px);
+      background: var(--healthy);
+      box-shadow: 0 0 8px rgba(0,229,160,0.5);
+    }
+  </style>
 </head>
 <body>
 
@@ -25,6 +90,15 @@
       <h1>Reef Watch</h1>
       <span>Global Coral Bleaching Monitor</span>
     </div>
+
+    <!-- View Toggle -->
+    <div id="view-toggle-wrap">
+      <span class="toggle-label active" id="label-stations">Stations</span>
+      <input type="checkbox" id="view-toggle" />
+      <label class="toggle-track" for="view-toggle"></label>
+      <span class="toggle-label" id="label-heatmap">Heatmap</span>
+    </div>
+
     <div id="status-badge">
       <span class="dot"></span>
       <span id="status-text">LOADING...</span>
@@ -102,8 +176,20 @@
   </div>
 
   <!-- Globe.gl -->
-  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
-  <script src="https://unpkg.com/globe.gl@2.27.2/dist/globe.gl.min.js"></script>
+  <!-- Three.js must load first and set window.THREE before globe.gl -->
+  <script src="https://unpkg.com/three@0.179.0/build/three.min.js"></script>
+  <script src="https://unpkg.com/globe.gl@2.45.3/dist/globe.gl.min.js"></script>
   <script src="main.js"></script>
+
+  <!-- Sync label active states with toggle -->
+  <script>
+    const toggle = document.getElementById('view-toggle');
+    const lStations = document.getElementById('label-stations');
+    const lHeatmap  = document.getElementById('label-heatmap');
+    toggle.addEventListener('change', () => {
+      lStations.classList.toggle('active', !toggle.checked);
+      lHeatmap.classList.toggle('active',  toggle.checked);
+    });
+  </script>
 </body>
 </html>
